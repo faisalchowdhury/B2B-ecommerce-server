@@ -5,6 +5,7 @@ const cors = require("cors");
 const port = process.env.PORT || 3000;
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("server working");
@@ -23,8 +24,24 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    await client.db("b2b_wholesale").command({ ping: 1 });
 
-    await client.db("admin").command({ ping: 1 });
+    const db = client.db("b2b_wholesale");
+    const productCollection = db.collection("products");
+    const categoryCollection = db.collection("categories");
+    // Get category
+    app.get("/categories", async (req, res) => {
+      const result = await categoryCollection.find().limit(5).toArray();
+      res.send(result);
+    });
+
+    app.post("/add-product", async (req, res) => {
+      const doc = req.body;
+
+      const result = await productCollection.insertOne(doc);
+      res.send(result);
+    });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
