@@ -35,6 +35,17 @@ async function run() {
       res.send(result);
     });
 
+    // Get Products by category
+
+    app.get("/category/:category", async (req, res) => {
+      const category = req.params.category;
+
+      const query = { category };
+
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/add-product", async (req, res) => {
       const doc = req.body;
 
