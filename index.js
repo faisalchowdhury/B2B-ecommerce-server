@@ -54,6 +54,11 @@ async function run() {
       const result = await productCollection.findOne(query);
       res.send(result);
     });
+    // All Products
+    app.get("/products", async (req, res) => {
+      const result = await productCollection.find().toArray();
+      res.send(result);
+    });
     app.post("/add-product", async (req, res) => {
       const doc = req.body;
 
