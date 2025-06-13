@@ -70,6 +70,7 @@ async function run() {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
+    // Add Product
     app.post("/add-product", async (req, res) => {
       const doc = req.body;
 
@@ -77,6 +78,17 @@ async function run() {
       res.send(result);
     });
 
+    // Update Product
+    app.put("/update-product/:id", async (req, res) => {
+      const document = req.body;
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: document,
+      };
+      const result = await productCollection.updateOne(query, update);
+      res.send(result);
+    });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
