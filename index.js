@@ -54,6 +54,17 @@ async function run() {
       const result = await productCollection.findOne(query);
       res.send(result);
     });
+
+    // New Arrival Products
+    app.get("/new-arrival-products", async (req, res) => {
+      const result = await productCollection
+        .find()
+        .sort({ _id: -1 })
+        .limit(4)
+        .toArray();
+      res.send(result);
+    });
+
     // All Products
     app.get("/products", async (req, res) => {
       const result = await productCollection.find().toArray();
