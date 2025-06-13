@@ -29,9 +29,14 @@ async function run() {
     const db = client.db("b2b_wholesale");
     const productCollection = db.collection("products");
     const categoryCollection = db.collection("categories");
-    // Get category
-    app.get("/categories", async (req, res) => {
+    // Get category Limit 5
+    app.get("/categories-limit", async (req, res) => {
       const result = await categoryCollection.find().limit(5).toArray();
+      res.send(result);
+    });
+    //  Get categories
+    app.get("/categories", async (req, res) => {
+      const result = await categoryCollection.find().toArray();
       res.send(result);
     });
 
@@ -70,6 +75,16 @@ async function run() {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
+    // My Products
+
+    app.get("/my-products", async (req, res) => {
+      const email = req.query.email;
+
+      const query = { user_email: email };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // Add Product
     app.post("/add-product", async (req, res) => {
       const doc = req.body;
@@ -89,6 +104,17 @@ async function run() {
       const result = await productCollection.updateOne(query, update);
       res.send(result);
     });
+
+    // Delete Product
+
+    app.delete("/delete/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+
+      res.send(result);
+    });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
