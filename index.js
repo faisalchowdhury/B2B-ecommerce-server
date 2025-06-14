@@ -171,6 +171,15 @@ async function run() {
     app.delete("/delete-cart/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
+
+      const fullCart = await cartCollection.findOne(query);
+
+      const filter = { _id: new ObjectId(fullCart.product_id) };
+      const fixQuantity = {
+        $inc: { quantity: fullCart.quantity },
+      };
+      await productCollection.updateOne(filter, fixQuantity);
+
       const result = await cartCollection.deleteOne(query);
       res.send(result);
     });
@@ -185,3 +194,10 @@ run().catch(console.dir);
 app.listen(port, () => {
   console.log("server running on ", port);
 });
+
+//  // Fixing Quantity
+// const fixQuantity = {
+//   $inc: { quantity: num_quantity },
+// };
+// const filter = { _id: new ObjectId(product_id) };
+// await productCollection.updateOne(filter, fixQuantity);
