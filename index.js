@@ -126,7 +126,10 @@ async function run() {
     app.post("/add-to-cart", async (req, res) => {
       const doc = req.body;
 
-      const result = await cartCollection.insertOne(doc);
+      const result = await cartCollection.insertOne({
+        ...doc,
+        date: new Date(),
+      });
 
       // Fixing Quantity
       const quantity = parseInt(doc.quantity);
@@ -139,7 +142,29 @@ async function run() {
       await productCollection.updateOne(filter, fixQuantity);
       res.send(result);
     });
+    // Cart Products
 
+    app.get("/cart", async (req, res) => {
+      const email = req.query.email;
+      const query = { email };
+      const result = await cartCollection
+        .find(query)
+        .sort({ _id: -1 })
+        .toArray();
+
+      for (let cartProduct of result) {
+        const allProducts = await productCollection.findOne({
+          _id: new ObjectId(cartProduct.product_id),
+        });
+
+        cartProduct.product_name = allProducts.product_name;
+        cartProduct.price = allProducts.price;
+        cartProduct.category = allProducts.category;
+        cartProduct.image_url = allProducts.image_url;
+        cartProduct.description = allProducts.description;
+      }
+      res.send(result);
+    });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
