@@ -29,6 +29,7 @@ async function run() {
     const db = client.db("b2b_wholesale");
     const productCollection = db.collection("products");
     const categoryCollection = db.collection("categories");
+    const cartCollection = db.collection("cart");
     // Get category Limit 5
     app.get("/categories-limit", async (req, res) => {
       const result = await categoryCollection.find().limit(5).toArray();
@@ -88,7 +89,10 @@ async function run() {
     // Add Product
     app.post("/add-product", async (req, res) => {
       const doc = req.body;
-
+      doc.price = parseFloat(doc.price);
+      doc.quantity = parseInt(doc.quantity);
+      doc.minimum_selling_quantity = parseInt(doc.minimum_selling_quantity);
+      doc.rating = parseInt(doc.rating);
       const result = await productCollection.insertOne(doc);
       res.send(result);
     });
@@ -112,6 +116,27 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.deleteOne(query);
 
+      res.send(result);
+    });
+
+    //////////////////////Cart Endpoints//////////////////////
+
+    // Add To cart
+
+    app.post("/add-to-cart", async (req, res) => {
+      const doc = req.body;
+
+      const result = await cartCollection.insertOne(doc);
+
+      // Fixing Quantity
+      const quantity = parseInt(doc.quantity);
+      const filter = { _id: new ObjectId(doc.product_id) };
+
+      const fixQuantity = {
+        $inc: { quantity: -quantity },
+      };
+
+      await productCollection.updateOne(filter, fixQuantity);
       res.send(result);
     });
 
