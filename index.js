@@ -32,7 +32,7 @@ const client = new MongoClient(uri, {
 const verifyToken = (req, res, next) => {
   const token = req?.cookies?.jwt_token;
   if (!token) {
-    return res.status(401).send({ message: " Access" });
+    return res.status(401).send({ message: "Unauthorized Access" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
@@ -43,6 +43,14 @@ const verifyToken = (req, res, next) => {
       next();
     }
   });
+};
+
+const emailVerifying = (req, res, next) => {
+  const email = req.headers["user-email"];
+  if (email != req.decoded.email) {
+    return res.status(403).send({ message: "Forbidden Access" });
+  }
+  next();
 };
 // Middleware
 
@@ -70,6 +78,17 @@ async function run() {
       });
 
       res.send({ success: true });
+    });
+
+    //  Remote Jwt token from cookie
+
+    app.post("/logout", (req, res) => {
+      res.cookie("jwt_token", "", {
+        httpOnly: true,
+        secure: false,
+      });
+
+      res.send({ message: "logout" });
     });
 
     // Get category Limit 5
@@ -114,13 +133,13 @@ async function run() {
     });
 
     // All Products
-    app.get("/products", verifyToken, async (req, res) => {
+    app.get("/products", verifyToken, emailVerifying, async (req, res) => {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
     // My Products
 
-    app.get("/my-products", async (req, res) => {
+    app.get("/my-products", verifyToken, emailVerifying, async (req, res) => {
       const email = req.query.email;
 
       const query = { user_email: email };
@@ -129,7 +148,7 @@ async function run() {
     });
 
     // Add Product
-    app.post("/add-product", async (req, res) => {
+    app.post("/add-product", verifyToken, emailVerifying, async (req, res) => {
       const doc = req.body;
       doc.price = parseFloat(doc.price);
       doc.quantity = parseInt(doc.quantity);
@@ -186,7 +205,7 @@ async function run() {
     });
     // Cart Products
 
-    app.get("/cart", async (req, res) => {
+    app.get("/cart", verifyToken, emailVerifying, async (req, res) => {
       const email = req.query.email;
       const query = { email };
       const result = await cartCollection
