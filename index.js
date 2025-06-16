@@ -8,11 +8,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://b2b-wholesale-4c968.web.app",
-      "*",
-    ],
+    origin: ["http://localhost:5173", "https://b2b-wholesale-4c968.web.app"],
     credentials: true,
   })
 );
@@ -79,19 +75,19 @@ async function run() {
       res.cookie("jwt_token", token, {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
+        sameSite: "None",
       });
 
       res.send({ success: true });
     });
 
-    //  Remote Jwt token from cookie
+    //  Remove Jwt token from cookie
 
     app.post("/logout", (req, res) => {
       res.cookie("jwt_token", "", {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
+        sameSite: "None",
       });
 
       res.send({ message: "logout" });
@@ -165,16 +161,21 @@ async function run() {
     });
 
     // Update Product
-    app.put("/update-product/:id", async (req, res) => {
-      const document = req.body;
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const update = {
-        $set: document,
-      };
-      const result = await productCollection.updateOne(query, update);
-      res.send(result);
-    });
+    app.put(
+      "/update-product/:id",
+      verifyToken,
+      emailVerifying,
+      async (req, res) => {
+        const document = req.body;
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const update = {
+          $set: document,
+        };
+        const result = await productCollection.updateOne(query, update);
+        res.send(result);
+      }
+    );
 
     // Delete Product
 
