@@ -1,12 +1,19 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const express = require("express");
 const cors = require("cors");
 const port = process.env.PORT || 3000;
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
-
+app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("server working");
 });
@@ -21,6 +28,24 @@ const client = new MongoClient(uri, {
   },
 });
 
+// Middleware
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.jwt_token;
+  if (!token) {
+    return res.status(401).send({ message: " Access" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Unauthorized Access" });
+    } else {
+      req.decoded = decoded;
+      next();
+    }
+  });
+};
+// Middleware
+
 async function run() {
   try {
     await client.connect();
@@ -30,6 +55,23 @@ async function run() {
     const productCollection = db.collection("products");
     const categoryCollection = db.collection("categories");
     const cartCollection = db.collection("cart");
+
+    //  Jwt Token
+
+    app.post("/jwt", (req, res) => {
+      const email = req.body.email;
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      });
+
+      res.cookie("jwt_token", token, {
+        httpOnly: true,
+        secure: false,
+      });
+
+      res.send({ success: true });
+    });
+
     // Get category Limit 5
     app.get("/categories-limit", async (req, res) => {
       const result = await categoryCollection.find().limit(5).toArray();
@@ -72,7 +114,7 @@ async function run() {
     });
 
     // All Products
-    app.get("/products", async (req, res) => {
+    app.get("/products", verifyToken, async (req, res) => {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
@@ -162,6 +204,7 @@ async function run() {
         cartProduct.category = allProducts.category;
         cartProduct.image_url = allProducts.image_url;
         cartProduct.description = allProducts.description;
+        cartProduct.short_description = allProducts.short_description;
       }
       res.send(result);
     });
