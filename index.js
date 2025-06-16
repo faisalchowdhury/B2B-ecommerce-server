@@ -1,5 +1,5 @@
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const express = require("express");
@@ -8,7 +8,11 @@ const port = process.env.PORT || 3000;
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://b2b-wholesale-4c968.web.app",
+      "*",
+    ],
     credentials: true,
   })
 );
@@ -56,8 +60,8 @@ const emailVerifying = (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
-    await client.db("b2b_wholesale").command({ ping: 1 });
+    // await client.connect();
+    // await client.db("b2b_wholesale").command({ ping: 1 });
 
     const db = client.db("b2b_wholesale");
     const productCollection = db.collection("products");
@@ -74,7 +78,8 @@ async function run() {
 
       res.cookie("jwt_token", token, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none",
       });
 
       res.send({ success: true });
@@ -85,7 +90,8 @@ async function run() {
     app.post("/logout", (req, res) => {
       res.cookie("jwt_token", "", {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none",
       });
 
       res.send({ message: "logout" });
