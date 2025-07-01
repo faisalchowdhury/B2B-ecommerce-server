@@ -1,4 +1,5 @@
 require("dotenv").config();
+const Stripe = require('stripe');
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -17,7 +18,7 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("server working");
 });
-
+const stripe = Stripe("sk_test_51Rg9SKRjZ7l8BlE9nfe7TCKyUq4jJxbQzWJ27dHjMUgPm1yqx5rOe9h9cBDAxwzupMu105rMSGqBVY2YXeR4Yv9N00PW8uRSZ6");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0o3jxdg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -56,8 +57,8 @@ const emailVerifying = (req, res, next) => {
 
 async function run() {
   try {
-    // await client.connect();
-    // await client.db("b2b_wholesale").command({ ping: 1 });
+    await client.connect();
+    await client.db("b2b_wholesale").command({ ping: 1 });
 
     const db = client.db("b2b_wholesale");
     const productCollection = db.collection("products");
@@ -228,6 +229,7 @@ async function run() {
         const allProducts = await productCollection.findOne({
           _id: new ObjectId(cartProduct.product_id),
         });
+        
 
         if (allProducts) {
           cartProduct.product_name = allProducts.product_name;
@@ -240,7 +242,26 @@ async function run() {
       }
       res.send(result);
     });
+     
+    // Get cart by Cart id
 
+    app.get('/cart/:cartId' , async(req ,res) => {
+      const cartId = req.params.cartId;
+      
+       const cart = await cartCollection.findOne({_id : new ObjectId(cartId)})
+         
+
+     const product = await productCollection.findOne({
+          _id: new ObjectId(cart.product_id),
+        });
+    
+      cart.product_name =  product.product_name;
+      cart.image_url =  product.image_url ;
+      cart.price =  product.price;
+    
+      res.status(200).send(cart);
+
+    })
     //Delete Cart
 
     app.delete("/delete-cart/:id", async (req, res) => {
@@ -258,6 +279,26 @@ async function run() {
       const result = await cartCollection.deleteOne(query);
       res.send(result);
     });
+
+
+
+    // Checkout payment
+
+    app.post('/create-payment-intent', async (req, res) => {
+  const { amount } = req.body;
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: 'usd',
+      payment_method_types: ['card'],
+    });
+    res.send({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
