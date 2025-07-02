@@ -66,6 +66,7 @@ async function run() {
     const productCollection = db.collection("products");
     const categoryCollection = db.collection("categories");
     const cartCollection = db.collection("cart");
+    const orderCollection = db.collection("order");
 
     //  Jwt Token
 
@@ -296,6 +297,58 @@ async function run() {
       }
     });
 
+    // Place order
+    app.post("/add-order", async (req, res) => {
+      const orderInfo = req.body;
+
+      const result = await orderCollection.insertOne(orderInfo);
+      res.status(201).send(result);
+    });
+
+    // Remove from cart
+
+    app.delete("/remove-from-cart/:cartId", async (req, res) => {
+      const cartId = req.params.cartId;
+      const query = { _id: new ObjectId(cartId) };
+      const result = await cartCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // My orders
+
+    app.get("/my-orders", async (req, res) => {
+      const email = req.query.email;
+      const query = { user_email: email };
+
+      try {
+        const result = await orderCollection
+          .find(query)
+          .sort({ _id: -1 })
+          .toArray();
+
+        for (let order of result) {
+          const product = await productCollection.findOne({
+            _id: new ObjectId(order.product_id),
+          });
+
+          if (product) {
+            order.product_name = product.product_name;
+            order.price = product.price;
+            order.category = product.category;
+            order.image_url = product.image_url;
+            order.description = product.description;
+            order.short_description = product.short_description;
+          }
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching user orders:", error);
+        res.status(500).json({ message: "Server error fetching user orders" });
+      }
+    });
+
+    //  //////////////////////////
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
