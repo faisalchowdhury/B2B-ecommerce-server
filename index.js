@@ -139,7 +139,7 @@ async function run() {
     });
 
     // All Products
-    app.get("/products", verifyToken, emailVerifying, async (req, res) => {
+    app.get("/products", async (req, res) => {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
