@@ -67,6 +67,21 @@ async function run() {
     const categoryCollection = db.collection("categories");
     const cartCollection = db.collection("cart");
     const orderCollection = db.collection("order");
+    const userCollection = db.collection("users");
+
+    // user
+
+    app.post("/user", async (req, res) => {
+      const email = req.body.email;
+      const findEmail = await userCollection.findOne({ email });
+      if (findEmail) {
+        return res.send({ message: "User already exist" });
+      }
+      const doc = req.body;
+      const result = await userCollection.insertOne(doc);
+
+      res.status(201).send({ message: "Data created" });
+    });
 
     //  Jwt Token
 
