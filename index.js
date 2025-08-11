@@ -59,8 +59,8 @@ const emailVerifying = (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
-    await client.db("b2b_wholesale").command({ ping: 1 });
+    // await client.connect();
+    // await client.db("b2b_wholesale").command({ ping: 1 });
 
     const db = client.db("b2b_wholesale");
     const productCollection = db.collection("products");
