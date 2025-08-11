@@ -19,7 +19,6 @@ app.get("/", (req, res) => {
   res.send("server working");
 });
 const stripe = Stripe(process.env.STRIPE_SECRET);
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0o3jxdg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
