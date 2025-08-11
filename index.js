@@ -1,8 +1,5 @@
 require("dotenv").config();
-<<<<<<< HEAD
 const Stripe = require("stripe");
-=======
->>>>>>> parent of 583110a (Test - Payment method implemented)
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -21,11 +18,8 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("server working");
 });
-<<<<<<< HEAD
 const stripe = Stripe(process.env.STRIPE_SECRET);
-=======
 
->>>>>>> parent of 583110a (Test - Payment method implemented)
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0o3jxdg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -208,6 +202,10 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.deleteOne(query);
 
+      // Delete this product from cart
+      const cartQuery = { product_id: id };
+      const deleteCart = await cartCollection.deleteMany(cartQuery);
+
       res.send(result);
     });
 
@@ -249,16 +247,17 @@ async function run() {
           _id: new ObjectId(cartProduct.product_id),
         });
 
-        cartProduct.product_name = allProducts.product_name;
-        cartProduct.price = allProducts.price;
-        cartProduct.category = allProducts.category;
-        cartProduct.image_url = allProducts.image_url;
-        cartProduct.description = allProducts.description;
-        cartProduct.short_description = allProducts.short_description;
+        if (allProducts) {
+          cartProduct.product_name = allProducts.product_name;
+          cartProduct.price = allProducts.price;
+          cartProduct.category = allProducts.category;
+          cartProduct.image_url = allProducts.image_url;
+          cartProduct.description = allProducts.description;
+          cartProduct.short_description = allProducts.short_description;
+        }
       }
       res.send(result);
     });
-<<<<<<< HEAD
 
     // Get cart by Cart id
 
@@ -277,9 +276,6 @@ async function run() {
 
       res.status(200).send(cart);
     });
-=======
-
->>>>>>> parent of 583110a (Test - Payment method implemented)
     //Delete Cart
 
     app.delete("/delete-cart/:id", async (req, res) => {
@@ -297,7 +293,6 @@ async function run() {
       const result = await cartCollection.deleteOne(query);
       res.send(result);
     });
-<<<<<<< HEAD
 
     // Checkout payment
 
@@ -368,8 +363,6 @@ async function run() {
     });
 
     //  //////////////////////////
-=======
->>>>>>> parent of 583110a (Test - Payment method implemented)
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
