@@ -208,10 +208,6 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.deleteOne(query);
 
-      // Delete this product from cart
-      const cartQuery = { product_id: id };
-      const deleteCart = await cartCollection.deleteMany(cartQuery);
-
       res.send(result);
     });
 
@@ -253,14 +249,12 @@ async function run() {
           _id: new ObjectId(cartProduct.product_id),
         });
 
-        if (allProducts) {
-          cartProduct.product_name = allProducts.product_name;
-          cartProduct.price = allProducts.price;
-          cartProduct.category = allProducts.category;
-          cartProduct.image_url = allProducts.image_url;
-          cartProduct.description = allProducts.description;
-          cartProduct.short_description = allProducts.short_description;
-        }
+        cartProduct.product_name = allProducts.product_name;
+        cartProduct.price = allProducts.price;
+        cartProduct.category = allProducts.category;
+        cartProduct.image_url = allProducts.image_url;
+        cartProduct.description = allProducts.description;
+        cartProduct.short_description = allProducts.short_description;
       }
       res.send(result);
     });
