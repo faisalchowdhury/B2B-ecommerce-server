@@ -18,9 +18,7 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("server working");
 });
-const stripe = Stripe(
-  "sk_test_51Rg9SKRjZ7l8BlE9nfe7TCKyUq4jJxbQzWJ27dHjMUgPm1yqx5rOe9h9cBDAxwzupMu105rMSGqBVY2YXeR4Yv9N00PW8uRSZ6"
-);
+const stripe = Stripe(process.env.STRIPE_SECRET);
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0o3jxdg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
